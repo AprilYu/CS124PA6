@@ -3,12 +3,14 @@ import java.io.*;
 import java.lang.StringBuilder;
 
 public class Translation {
-	static ArrayList<ArrayList<String>> sentences;
+	static ArrayList<ArrayList<TaggedWord>> sentences;
 	static Map<String, ArrayList<String>> dictionary;
 	
-	public static final String DEFAULT_DICT = ".csv";
-	public static final String DEV_SENTENCES = ".txt";
-
+	public static final String DEFAULT_DICT = "data/dictionary.csv";
+	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
+	
+	public static final String NO_TAG = "NO_TAG";
+	
 	public Translation(String corpusFileName, String dictionaryFileName) {
 		try {
 			sentences = readSentences(corpusFileName);
@@ -32,12 +34,14 @@ public class Translation {
 		while((line = rd.readLine()) != null) {
 			line = line.toLowerCase();
 			String[] splitLine = line.split(",");
-			String word = splitLine[0];
+			String word = splitLine[0].trim();
 			if (splitLine.length < 2)
 				throw new IOException("Error: no provided translations for word " + word + " on line " + lineNum);
 			ArrayList<String> possibleTranslations = new ArrayList<String>();
 			for (int i = 1; i < splitLine.length; i++) {
-				possibleTranslations.add(splitLine[i]);
+				String trans = splitLine[i].trim();
+				if (!"".equals(trans))
+					possibleTranslations.add(trans);
 			}
 			dict.put(word, possibleTranslations);
 			lineNum++;
@@ -48,8 +52,8 @@ public class Translation {
 	/*
 	 * Reads in sentences from a file. Sentences should be written one per line in the specified file.
 	 */
-	public ArrayList<ArrayList<String>> readSentences(String sentenceFile) throws IOException {
-		ArrayList<ArrayList<String>> sentences = new ArrayList<ArrayList<String>>();
+	public ArrayList<ArrayList<TaggedWord>> readSentences(String sentenceFile) throws IOException {
+		ArrayList<ArrayList<TaggedWord>> sentences = new ArrayList<ArrayList<TaggedWord>>();
 		BufferedReader rd = new BufferedReader(new FileReader(new File(sentenceFile)));
 		String line = null;
 		int lineNum = 0;
@@ -58,7 +62,7 @@ public class Translation {
 			if ("".equals(line)) {
 				continue;
 			}	
-			ArrayList<String> tokenizedLine = tokenizeLine(line);
+			ArrayList<TaggedWord> tokenizedLine = tokenizeLine(line);
 			sentences.add(tokenizedLine);
 			lineNum++;
 		}
@@ -69,22 +73,107 @@ public class Translation {
 	 * Tokenizes the given line by taking groups of consecutive alphabetic characters and
 	 * treating them as tokens, ignoring punctuation
 	 */
-	private ArrayList<String> tokenizeLine(String line) {
-		ArrayList<String> tokenizedLine = new ArrayList<String>();
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < line.length(); i++) {
-			char ch = line.charAt(i);
-			if (!Character.isLetter(ch)) {
-				if (builder.length() > 0) {
-					tokenizedLine.add(builder.toString());
-				}
-				builder = new StringBuilder();
-			} else {
-				builder.append(ch);
+	private ArrayList<TaggedWord> tokenizeLine(String line) {
+		ArrayList<TaggedWord> tokenizedLine = new ArrayList<TaggedWord>();
+		String[] splitLine = line.split(" ");
+		for (String token : splitLine) {
+			List<String> cleanedToken = tokenizeOnPunctuation(token);
+			for (String token2 : cleanedToken) {
+				// now we should have the tagged token
+				tokenizedLine.add(new TaggedWord(token2.trim()));
 			}
 		}
-		System.out.println("Tokenized "  + line + " into " + tokenizedLine);
 		return tokenizedLine;
+	}
+	
+	private List<String> tokenizeOnPunctuation(String token) {
+		List<String> cleanedToken = new ArrayList<String>();
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < token.length(); i++) {
+			String toCheck = token.substring(i, i+1);
+			if (isPunctuation(toCheck)) {
+				if (builder.length() > 0) {
+					cleanedToken.add(builder.toString());
+				}
+				if (shouldKeepPunctuation(toCheck)) {
+					cleanedToken.add(toCheck);
+				}	
+				builder = new StringBuilder();
+			} else {
+				builder.append(toCheck);
+			}
+		}
+		if (builder.length() > 0) {
+			cleanedToken.add(builder.toString());
+		}
+		return cleanedToken;
+	}
+	
+	private boolean shouldKeepPunctuation(String token) {
+		switch (token.charAt(0)) {
+			case '.':
+			case ',':
+			case '!':
+			case '"':
+			case '+':
+			//case '-':
+			//case "_":
+			case '&':
+			case '$':
+			case '#':
+			case '@':
+			case '~':
+			case '`':
+			case '(':
+			case ')':
+			case '{':
+			case '}':
+			case '[':
+			case ']':
+			case '?':
+			case ';':
+			case ':':
+			case '^':
+			case '*':
+				return true;
+			default:
+				return false;
+		}
+	}
+	
+	private boolean isPunctuation(String token) {
+		if (token.length() == 0)
+			return true;
+		switch (token.charAt(0)) {
+			case '.':
+			case ',':
+			case '!':
+			case '\'':
+			case '"':
+			case '+':
+			//case '-':
+			//case "_":
+			case '&':
+			case '$':
+			case '#':
+			case '@':
+			case '~':
+			case '`':
+			case '(':
+			case ')':
+			case '{':
+			case '}':
+			case '[':
+			case ']':
+			case '?':
+			case ';':
+			case ':':
+			case '^':
+			case '*':
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public static String convertListToString(ArrayList<String> sentence) {
@@ -94,17 +183,30 @@ public class Translation {
 		}
 		return s;
 	}
+	
+	public static String convertTaggedListToString(ArrayList<TaggedWord> sentence) {
+		String s = "";
+		for(int i = 0; i < sentence.size(); i++) {
+			s += sentence.get(i).word + " ";
+		}
+		return s;
+	}
 
 	public static String getTranslation(String foreignWord) {
 		//currently gets the first English translation from the list of possible translations
 		//FOR LATER: implement n-gram stuff to choose best translation of the word.
 		//May need to change function header for this ^^ depending on choice of n
 		ArrayList<String> possibleTranslations = dictionary.get(foreignWord);
+		if (possibleTranslations == null) {
+			//System.out.println("Possible Error: No entry for word " + foreignWord);
+			return foreignWord;
+		}
 		return possibleTranslations.get(0);
 	}
     
     public static ArrayList<String> trimPastTense(ArrayList<String> sentence){
         //look at part of speech tags and remove auxilary verbs from passe compose constructions (either look at word before word with past participle tag and remove if etre or avoir, or find tag for these auxilary verbs)
+
         Iterator<String> it = sentence.iterator();
         boolean prevVerb=false;
         while(it.hasNext()){
@@ -122,19 +224,22 @@ public class Translation {
     }
 
     public static ArrayList<String> preProcess(ArrayList<String> sentence){
-    
+    	return null;
+
     }
     
-	public static ArrayList<String> translateSentence(ArrayList<String> sentence) {
+
+
+	public static ArrayList<TaggedWord> translateSentence(ArrayList<TaggedWord> sentence) {
 		if (sentence.isEmpty()) {
-            return new ArrayList<String>();
+            return new ArrayList<TaggedWord>();
         }
 
-        ArrayList<String> bestSentence = new ArrayList<String>();
+        ArrayList<TaggedWord> bestSentence = new ArrayList<TaggedWord>();
         for(int i = 0; i < sentence.size(); i++) {
-        	String frenchWord = sentence.get(i);
+        	String frenchWord = sentence.get(i).word;
         	String englishTranslation = Translation.getTranslation(frenchWord);
-        	bestSentence.add(englishTranslation);
+        	bestSentence.add(new TaggedWord(englishTranslation, sentence.get(i).tag));
         }
         return bestSentence;
 	}
@@ -143,15 +248,44 @@ public class Translation {
 		Translation tfe = new Translation(sentenceFile, dictFile);
 
 		for(int i = 0; i < sentences.size(); i++) {
-			ArrayList<String> s = sentences.get(i);
-			ArrayList<String> translation = translateSentence(s);
-
+			ArrayList<TaggedWord> s = sentences.get(i);
+			ArrayList<TaggedWord> translation = translateSentence(s);
+			
+			translation = reorderNounAdjPairs(translation);
+			
+			
 			System.out.println("###\nThe French Sentence:");
-			System.out.println(Translation.convertListToString(s));
+			System.out.println(Translation.convertTaggedListToString(s));
 			System.out.println("   gets translated to:");
-			System.out.println(Translation.convertListToString(translation));
+			System.out.println(Translation.convertTaggedListToString(translation));
 			System.out.println();
 		}
+	}
+	
+	private static ArrayList<TaggedWord> reorderNounAdjPairs(ArrayList<TaggedWord> sentence) {
+		System.out.println("Re-ordering adjective/noun pairs...");
+		for (int i = 0; i < sentence.size() - 1; i++) {
+			String tag1 = sentence.get(i).tag;
+			String tag2 = sentence.get(i + 1).tag;
+			if (isNoun(tag1) && isAdj(tag2)) {
+				TaggedWord adj = sentence.get(i + 1);
+				sentence.remove(i + 1);
+				sentence.add(i, adj);
+			}
+		}
+		return sentence;
+	}
+	
+	private static boolean isNoun(String tag) {
+		if ("n".equals(tag))
+			return true;
+		return false;
+	}
+	
+	private static boolean isAdj(String tag) {
+		if ("a".equals(tag))
+			return true;
+		return false;
 	}
 
 
@@ -166,5 +300,27 @@ public class Translation {
 			dictFile = args[1];
 		System.out.println("Translating sentences in " + sentenceFile + " using dict " + dictFile);
         Translation.eval(sentenceFile, dictFile);
+    }
+    
+    public static class TaggedWord {
+    	public final String word;
+    	public final String tag;
+    	
+    	public TaggedWord(String word, String tag) {
+    		this.word = word;
+    		this.tag = tag;
+    	}
+    	
+    	public TaggedWord(String unsplitWord) {
+    		if (unsplitWord.indexOf('_') == -1) {
+    			this.word = unsplitWord;
+    			this.tag = NO_TAG;
+    		} else {
+    			String[] splitWord = unsplitWord.split("_");
+    			this.word = splitWord[0];
+    			this.tag = splitWord[1];
+    		}
+    		//System.out.println("Parsed " + unsplitWord + " as " + this.word + " _ " + this.tag);
+    	}
     }
 }
