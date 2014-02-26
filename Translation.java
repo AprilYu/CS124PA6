@@ -5,6 +5,7 @@ import java.lang.StringBuilder;
 public class Translation {
 	static ArrayList<ArrayList<TaggedWord>> sentences;
 	static Map<String, ArrayList<String>> dictionary;
+	static List<String> auxilaryVerbs =Arrays.asList("suis", "es", "est", "sommes", "êtes", "sont", "ai", "as", "a", "avons", "avez", "ont");
 	
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
@@ -204,32 +205,25 @@ public class Translation {
 		return possibleTranslations.get(0);
 	}
     
+    /*
+     *removes auxilary verbs so that only the past participle gets translated. 
+     *looks to see if there are two consecutive verbs and if the first verb is an auxilary verb. if so, 
+     *the auxilary verb is removed
+     ***Known bug: does not handle case where auxilary verb and past participle are separated. eg. n'a jamais vu
+     */
     public static ArrayList<TaggedWord> trimPastTense(ArrayList<TaggedWord> sentence){
-        //look at part of speech tags and remove auxilary verbs from passe compose constructions (either look at word before word with past participle tag and remove if etre or avoir, or find tag for these auxilary verbs)
-
-        /*Iterator<String> it = sentence.iterator();
-        boolean prevVerb=false;
-        while(it.hasNext()){
-            TaggedWord w = it.next();
-            if(w.tag.equals("_V")){
-                if(prevVerb){
-                    it.remove();
-                }
-                prevVerb=true;
-            }else{
-                prevVerb=false;
-            }
-        }*/
+      System.out.println("Processing Passe Composee...");
         boolean prevVerb=false;
         for(int i=0;i<sentence.size();i++){
         	TaggedWord w = sentence.get(i);
         	if(w.tag.equals("v")){
         		if(prevVerb){
-        			//System.out.println("#################past"+w.word+" "+sentence.get(i-1).word);
                     sentence.remove(i-1);
                     sentence.add(i-1,new TaggedWord("","NO_TAG"));
                 }
+                if(auxilaryVerbs.contains(w.word)){
                 prevVerb=true;
+           		 }else prevVerb=false;
             }else{
                 prevVerb=false;
         	}
