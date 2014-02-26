@@ -198,7 +198,7 @@ public class Translation {
 		//May need to change function header for this ^^ depending on choice of n
 		ArrayList<String> possibleTranslations = dictionary.get(foreignWord);
 		if (possibleTranslations == null) {
-			System.out.println("Possible Error: No entry for word " + foreignWord);
+			//System.out.println("Possible Error: No entry for word " + foreignWord);
 			return foreignWord;
 		}
 		return possibleTranslations.get(0);
