@@ -3,12 +3,14 @@ import java.io.*;
 import java.lang.StringBuilder;
 
 public class Translation {
-	static ArrayList<ArrayList<String>> sentences;
+	static ArrayList<ArrayList<TaggedWord>> sentences;
 	static Map<String, ArrayList<String>> dictionary;
 	
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/trainSentences.txt";
-
+	
+	public static final String NO_TAG = "NO_TAG";
+	
 	public Translation(String corpusFileName, String dictionaryFileName) {
 		try {
 			sentences = readSentences(corpusFileName);
@@ -50,8 +52,8 @@ public class Translation {
 	/*
 	 * Reads in sentences from a file. Sentences should be written one per line in the specified file.
 	 */
-	public ArrayList<ArrayList<String>> readSentences(String sentenceFile) throws IOException {
-		ArrayList<ArrayList<String>> sentences = new ArrayList<ArrayList<String>>();
+	public ArrayList<ArrayList<TaggedWord>> readSentences(String sentenceFile) throws IOException {
+		ArrayList<ArrayList<TaggedWord>> sentences = new ArrayList<ArrayList<TaggedWord>>();
 		BufferedReader rd = new BufferedReader(new FileReader(new File(sentenceFile)));
 		String line = null;
 		int lineNum = 0;
@@ -60,7 +62,7 @@ public class Translation {
 			if ("".equals(line)) {
 				continue;
 			}	
-			ArrayList<String> tokenizedLine = tokenizeLine(line);
+			ArrayList<TaggedWord> tokenizedLine = tokenizeLine(line);
 			sentences.add(tokenizedLine);
 			lineNum++;
 		}
@@ -71,19 +73,20 @@ public class Translation {
 	 * Tokenizes the given line by taking groups of consecutive alphabetic characters and
 	 * treating them as tokens, ignoring punctuation
 	 */
-	private ArrayList<String> tokenizeLine(String line) {
-		ArrayList<String> tokenizedLine = new ArrayList<String>();
+	private ArrayList<TaggedWord> tokenizeLine(String line) {
+		ArrayList<TaggedWord> tokenizedLine = new ArrayList<TaggedWord>();
 		String[] splitLine = line.split(" ");
 		for (String token : splitLine) {
-			List<String> cleanedToken = removePunctuation(token);
+			List<String> cleanedToken = tokenizeOnPunctuation(token);
 			for (String token2 : cleanedToken) {
-				tokenizedLine.add(token2.trim());
+				// now we should have the tagged token
+				tokenizedLine.add(new TaggedWord(token2.trim()));
 			}
 		}
 		return tokenizedLine;
 	}
 	
-	private List<String> removePunctuation(String token) {
+	private List<String> tokenizeOnPunctuation(String token) {
 		List<String> cleanedToken = new ArrayList<String>();
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < token.length(); i++) {
@@ -92,6 +95,9 @@ public class Translation {
 				if (builder.length() > 0) {
 					cleanedToken.add(builder.toString());
 				}
+				if (shouldKeepPunctuation(toCheck)) {
+					cleanedToken.add(toCheck);
+				}	
 				builder = new StringBuilder();
 			} else {
 				builder.append(toCheck);
@@ -101,6 +107,38 @@ public class Translation {
 			cleanedToken.add(builder.toString());
 		}
 		return cleanedToken;
+	}
+	
+	private boolean shouldKeepPunctuation(String token) {
+		switch (token.charAt(0)) {
+			case '.':
+			case ',':
+			case '!':
+			case '"':
+			case '+':
+			//case '-':
+			//case "_":
+			case '&':
+			case '$':
+			case '#':
+			case '@':
+			case '~':
+			case '`':
+			case '(':
+			case ')':
+			case '{':
+			case '}':
+			case '[':
+			case ']':
+			case '?':
+			case ';':
+			case ':':
+			case '^':
+			case '*':
+				return true;
+			default:
+				return false;
+		}
 	}
 	
 	private boolean isPunctuation(String token) {
@@ -145,6 +183,14 @@ public class Translation {
 		}
 		return s;
 	}
+	
+	public static String convertTaggedListToString(ArrayList<TaggedWord> sentence) {
+		String s = "";
+		for(int i = 0; i < sentence.size(); i++) {
+			s += sentence.get(i).word + " ";
+		}
+		return s;
+	}
 
 	public static String getTranslation(String foreignWord) {
 		//currently gets the first English translation from the list of possible translations
@@ -152,8 +198,8 @@ public class Translation {
 		//May need to change function header for this ^^ depending on choice of n
 		ArrayList<String> possibleTranslations = dictionary.get(foreignWord);
 		if (possibleTranslations == null) {
-			System.out.println("Error: No entry for word " + foreignWord);
-			return "NO_TRANS";
+			System.out.println("Possible Error: No entry for word " + foreignWord);
+			return foreignWord;
 		}
 		return possibleTranslations.get(0);
 	}
@@ -163,14 +209,14 @@ public class Translation {
 		return null;
     }
 
-	public static ArrayList<String> translateSentence(ArrayList<String> sentence) {
+	public static ArrayList<String> translateSentence(ArrayList<TaggedWord> sentence) {
 		if (sentence.isEmpty()) {
             return new ArrayList<String>();
         }
 
         ArrayList<String> bestSentence = new ArrayList<String>();
         for(int i = 0; i < sentence.size(); i++) {
-        	String frenchWord = sentence.get(i);
+        	String frenchWord = sentence.get(i).word;
         	String englishTranslation = Translation.getTranslation(frenchWord);
         	bestSentence.add(englishTranslation);
         }
@@ -181,11 +227,11 @@ public class Translation {
 		Translation tfe = new Translation(sentenceFile, dictFile);
 
 		for(int i = 0; i < sentences.size(); i++) {
-			ArrayList<String> s = sentences.get(i);
+			ArrayList<TaggedWord> s = sentences.get(i);
 			ArrayList<String> translation = translateSentence(s);
 
 			System.out.println("###\nThe French Sentence:");
-			System.out.println(Translation.convertListToString(s));
+			System.out.println(Translation.convertTaggedListToString(s));
 			System.out.println("   gets translated to:");
 			System.out.println(Translation.convertListToString(translation));
 			System.out.println();
@@ -204,5 +250,27 @@ public class Translation {
 			dictFile = args[1];
 		System.out.println("Translating sentences in " + sentenceFile + " using dict " + dictFile);
         Translation.eval(sentenceFile, dictFile);
+    }
+    
+    public class TaggedWord {
+    	public final String word;
+    	public final String tag;
+    	
+    	public TaggedWord(String word, String tag) {
+    		this.word = word;
+    		this.tag = tag;
+    	}
+    	
+    	public TaggedWord(String unsplitWord) {
+    		if (unsplitWord.indexOf('_') == -1) {
+    			this.word = unsplitWord;
+    			this.tag = NO_TAG;
+    		} else {
+    			String[] splitWord = unsplitWord.split("_");
+    			this.word = splitWord[0];
+    			this.tag = splitWord[1];
+    		}
+    		System.out.println("Parsed " + unsplitWord + " as " + this.word + " _ " + this.tag);
+    	}
     }
 }
