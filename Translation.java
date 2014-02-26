@@ -204,14 +204,14 @@ public class Translation {
 		return possibleTranslations.get(0);
 	}
     
-    public static ArrayList<String> trimPastTense(ArrayList<String> sentence){
+    public static ArrayList<TaggedWord> trimPastTense(ArrayList<TaggedWord> sentence){
         //look at part of speech tags and remove auxilary verbs from passe compose constructions (either look at word before word with past participle tag and remove if etre or avoir, or find tag for these auxilary verbs)
 
-        Iterator<String> it = sentence.iterator();
+        /*Iterator<String> it = sentence.iterator();
         boolean prevVerb=false;
         while(it.hasNext()){
-            String w = it.next();
-            if(w.substring(w.length()-2, w.length()).equals("_V")){
+            TaggedWord w = it.next();
+            if(w.tag.equals("_V")){
                 if(prevVerb){
                     it.remove();
                 }
@@ -219,12 +219,28 @@ public class Translation {
             }else{
                 prevVerb=false;
             }
+        }*/
+        boolean prevVerb=false;
+        for(int i=0;i<sentence.size();i++){
+        	TaggedWord w = sentence.get(i);
+        	if(w.tag.equals("v")){
+        		if(prevVerb){
+        			//System.out.println("#################past"+w.word+" "+sentence.get(i-1).word);
+                    sentence.remove(i-1);
+                    sentence.add(i-1,new TaggedWord("","NO_TAG"));
+                }
+                prevVerb=true;
+            }else{
+                prevVerb=false;
+        	}
         }
+
         return sentence;
     }
 
-    public static ArrayList<String> preProcess(ArrayList<String> sentence){
-    	return null;
+    public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
+    	sentence = trimPastTense(sentence);
+    	return sentence;
 
     }
     
@@ -249,6 +265,7 @@ public class Translation {
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
+			s = preProcess(s);
 			ArrayList<TaggedWord> translation = translateSentence(s);
 			
 			translation = reorderNounAdjPairs(translation);
@@ -302,7 +319,7 @@ public class Translation {
         Translation.eval(sentenceFile, dictFile);
     }
     
-    public static class TaggedWord {
+    public static class TaggedWord{
     	public final String word;
     	public final String tag;
     	
