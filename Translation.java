@@ -238,7 +238,10 @@ public class Translation {
 
     }
     
-
+    public static ArrayList<TaggedWord> postProcess(ArrayList<TaggedWord> sentence){
+    	sentence = reorderNounAdjPairs(sentence);
+    	return sentence;
+    }
 
 	public static ArrayList<TaggedWord> translateSentence(ArrayList<TaggedWord> sentence) {
 		if (sentence.isEmpty()) {
@@ -262,7 +265,7 @@ public class Translation {
 			s = preProcess(s);
 			ArrayList<TaggedWord> translation = translateSentence(s);
 			
-			translation = reorderNounAdjPairs(translation);
+			translation = postProcess(translation);
 			
 			
 			System.out.println("###\nThe French Sentence:");
