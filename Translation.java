@@ -7,7 +7,7 @@ public class Translation {
 	static Map<String, ArrayList<String>> dictionary;
 	
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
-	public static final String DEV_SENTENCES = "data/trainSentences.txt";
+	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
 	
 	public static final String NO_TAG = "NO_TAG";
 	
