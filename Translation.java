@@ -270,7 +270,7 @@ public class Translation {
     			this.word = splitWord[0];
     			this.tag = splitWord[1];
     		}
-    		System.out.println("Parsed " + unsplitWord + " as " + this.word + " _ " + this.tag);
+    		//System.out.println("Parsed " + unsplitWord + " as " + this.word + " _ " + this.tag);
     	}
     }
 }
