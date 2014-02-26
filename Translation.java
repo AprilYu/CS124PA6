@@ -43,6 +43,10 @@ public class Translation {
 		ArrayList<String> possibleTranslations = dictionary.get(foreignWord);
 		return possibleTranslations.get(0);
 	}
+    
+    public static ArrayList<String> trimPastTense(ArrayList<String> sentence){
+        //look at part of speech tags and remove auxilary verbs from passe compose constructions (either look at word before word with past participle tag and remove if etre or avoir, or find tag for these auxilary verbs)
+    }
 
 	public static ArrayList<String> translateSentence(ArrayList<String> sentence) {
 		if (sentence.isEmpty()) {
