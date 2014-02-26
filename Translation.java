@@ -105,8 +105,26 @@ public class Translation {
     
     public static ArrayList<String> trimPastTense(ArrayList<String> sentence){
         //look at part of speech tags and remove auxilary verbs from passe compose constructions (either look at word before word with past participle tag and remove if etre or avoir, or find tag for these auxilary verbs)
+        Iterator<String> it = sentence.iterator();
+        boolean prevVerb=false;
+        while(it.hasNext()){
+            String w = it.next();
+            if(w.substring(w.length()-2, w.length()).equals("_V")){
+                if(prevVerb){
+                    it.remove();
+                }
+                prevVerb=true;
+            }else{
+                prevVerb=false;
+            }
+        }
+        return sentence;
     }
 
+    public static ArrayList<String> preProcess(ArrayList<String> sentence){
+    
+    }
+    
 	public static ArrayList<String> translateSentence(ArrayList<String> sentence) {
 		if (sentence.isEmpty()) {
             return new ArrayList<String>();
