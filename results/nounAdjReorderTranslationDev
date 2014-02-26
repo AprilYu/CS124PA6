@@ -1,0 +1,71 @@
+Translating sentences in data/taggedTrainSentences.txt using dict data/dictionary.csv
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+les jeux olympiques sont un événement international majeur ,  regroupant les sports d été et d hiver ,  auquel des milliers d athlètes participent .  
+   gets translated to:
+the olympic games are a international major event ,  gathering the sports of summer and of winter ,  which some thousands of athletes participate .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+il faut dire que le défi artistique ,  lesté d une grosse enveloppe budgétaire ,  est terriblement excitant pour ceux qui ont toujours pris leurs rêves pour des réalités .  
+   gets translated to:
+he must say that the artistic challenge ,  weighted of big a budgetary envelope ,  is terribly exciting for those who have always taken their dreams for some reality .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+je lis sur smartphone depuis cinq ans :  c est plus simple et plus léger que d avoir des livres en papier dans son sac à main .  
+   gets translated to:
+i read on smart phone since 5 years :  it is more simple and more light that of to have some books in paper in his bag in hand .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+l assemblée nationale s  est prononcée par un vote solennel pour l adoption définitive du projet de loi ouvrant le mariage aux couples de même sexe ,  mardi 23 avril 2013 ,  puis le 17 mai ,  le conseil constitutionnel a validé le texte ,  qui a été promulgué le lendemain par le président de la république .  
+   gets translated to:
+the national assembly themselves  is pronounced by a solemn vote for the definitive adoption of project of law opening the marriage to the couples of same gender ,  23 tuesday april 2013 ,  then the 17 may ,  the constitutional council has validity the text ,  who has summer published the tomorrow by the president of the republic .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+la trêve proposée mercredi soir par le pouvoir ukrainien n  a jamais vu le jour .  
+   gets translated to:
+the truce offered wednesday evening by the ukrainian power does not  has never seen the day .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+a trois jours de la cérémonie de clôture ,  la france a battu jeudi son record de médailles obtenues lors d une seule et même édition des jo d hiver .  
+   gets translated to:
+has three days of the ceremony of fence ,  the france has beaten thursday his record of medals obtained during of a only and same edition some olympic games of winter .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+cette somme représente près de 10 % de la capitalisation boursière de facebook et c est le prix le plus élevé jamais payé au cours d un deal dans la silicon valley ,  notamment sur une entreprise adossée à du capital-risque .  
+   gets translated to:
+that sum represent close of 10 % of the broker capitalization of facebook and it is the price the more raised never paid to the during of a deal in the silicon valley ,  especially on a company leaned against in of venture capital .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+un peu comme chez vini divini ,  son exquise petite cantine napolitaine ,  nichée dans une ruelle bruxelloise ,  où la chanteuse et flûtiste belge nous a donné rendez-vous ,  il faudra se laisser faire et attendre ,  le jour dit ,  l inspiration du chef .  
+   gets translated to:
+a little like in vini divini ,  his small exquisite neapolitan cafeteria ,  brood in a inhabitant of brussels street ,  where the singer and belgian flutist we has gave appointment ,  he must oneself leave to do and to wait ,  the day says ,  the inspiration of boss .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+le ministère de l éducation nationale a annoncé ,  jeudi 20 février ,  que la réforme des programmes du primaire et du collège serait partiellement reportée d un an .  
+   gets translated to:
+the ministry of the national educaton has announced ,  20 thursday february ,  that the reform some programs of primary and of middle school will be partially copied of a year .  
+
+Re-ordering adjective/noun pairs...
+###
+The French Sentence:
+ce test n est donc pas utile pour les utilisateurs de cannabis occasionnel ,  contrairement à ce qui était annoncé .  
+   gets translated to:
+this test does not is therefore not useful for the users of occasional cannabis ,  contrary to in this who was announced .  
+

@@ -209,16 +209,16 @@ public class Translation {
 		return null;
     }
 
-	public static ArrayList<String> translateSentence(ArrayList<TaggedWord> sentence) {
+	public static ArrayList<TaggedWord> translateSentence(ArrayList<TaggedWord> sentence) {
 		if (sentence.isEmpty()) {
-            return new ArrayList<String>();
+            return new ArrayList<TaggedWord>();
         }
 
-        ArrayList<String> bestSentence = new ArrayList<String>();
+        ArrayList<TaggedWord> bestSentence = new ArrayList<TaggedWord>();
         for(int i = 0; i < sentence.size(); i++) {
         	String frenchWord = sentence.get(i).word;
         	String englishTranslation = Translation.getTranslation(frenchWord);
-        	bestSentence.add(englishTranslation);
+        	bestSentence.add(new TaggedWord(englishTranslation, sentence.get(i).tag));
         }
         return bestSentence;
 	}
@@ -228,14 +228,43 @@ public class Translation {
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
-			ArrayList<String> translation = translateSentence(s);
-
+			ArrayList<TaggedWord> translation = translateSentence(s);
+			
+			translation = reorderNounAdjPairs(translation);
+			
+			
 			System.out.println("###\nThe French Sentence:");
 			System.out.println(Translation.convertTaggedListToString(s));
 			System.out.println("   gets translated to:");
-			System.out.println(Translation.convertListToString(translation));
+			System.out.println(Translation.convertTaggedListToString(translation));
 			System.out.println();
 		}
+	}
+	
+	private static ArrayList<TaggedWord> reorderNounAdjPairs(ArrayList<TaggedWord> sentence) {
+		System.out.println("Re-ordering adjective/noun pairs...");
+		for (int i = 0; i < sentence.size() - 1; i++) {
+			String tag1 = sentence.get(i).tag;
+			String tag2 = sentence.get(i + 1).tag;
+			if (isNoun(tag1) && isAdj(tag2)) {
+				TaggedWord adj = sentence.get(i + 1);
+				sentence.remove(i + 1);
+				sentence.add(i, adj);
+			}
+		}
+		return sentence;
+	}
+	
+	private static boolean isNoun(String tag) {
+		if ("n".equals(tag))
+			return true;
+		return false;
+	}
+	
+	private static boolean isAdj(String tag) {
+		if ("a".equals(tag))
+			return true;
+		return false;
 	}
 
 
@@ -252,7 +281,7 @@ public class Translation {
         Translation.eval(sentenceFile, dictFile);
     }
     
-    public class TaggedWord {
+    public static class TaggedWord {
     	public final String word;
     	public final String tag;
     	
