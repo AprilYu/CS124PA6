@@ -239,7 +239,7 @@ public class Translation {
 			List<String> possibleSentence = new ArrayList<String>(Translation.convertTaggedListToList(sentenceSoFar));
 			possibleSentence.add(trans);
 			double score = lm.score(possibleSentence);
-			System.out.println("Score for " + possibleSentence + " is " + score);
+			//System.out.println("Score for " + possibleSentence + " is " + score);
 			if(score > bestScore) {
 				bestScore = score;
 				bestTranslation = trans;
