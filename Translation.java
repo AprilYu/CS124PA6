@@ -14,7 +14,7 @@ public class Translation {
 	
 	public static final String NO_TAG = "NO_TAG";
 
-	LanguageModel lm;
+	static LanguageModel lm;
 	
 	public Translation(String corpusFileName, String dictionaryFileName, LanguageModel languageModel) {
 		try {
@@ -199,7 +199,15 @@ public class Translation {
 		return s;
 	}
 
-	public static String getTranslation(String foreignWord) {
+	public static List<String> convertTaggedListToList(ArrayList<TaggedWord> sentence) {
+		List<String> untaggedWords = new ArrayList<String>();
+		for(TaggedWord word : sentence) {
+			untaggedWords.add(word.word);
+		}
+		return untaggedWords;
+	}
+
+	public static String getTranslation(ArrayList<TaggedWord> sentenceSoFar, String foreignWord) {
 		//currently gets the first English translation from the list of possible translations
 		//FOR LATER: implement n-gram stuff to choose best translation of the word.
 		//May need to change function header for this ^^ depending on choice of n
@@ -208,7 +216,24 @@ public class Translation {
 			//System.out.println("Possible Error: No entry for word " + foreignWord);
 			return foreignWord;
 		}
-		return possibleTranslations.get(0);
+
+		String bestTranslation = "";
+		double bestScore = 0.0;
+		for(String trans : possibleTranslations) {
+			List<String> possibleSentence = new ArrayList<String>(Translation.convertTaggedListToList(sentenceSoFar));
+			possibleSentence.add(trans);
+			double score = lm.score(possibleSentence);
+			if(score > bestScore) {
+				bestScore = score;
+				bestTranslation = trans;
+			}
+		}
+
+		if(bestTranslation.equals("")) {
+			bestTranslation = possibleTranslations.get(0);
+		}
+
+		return bestTranslation;
 	}
     
     /*
@@ -257,7 +282,7 @@ public class Translation {
         ArrayList<TaggedWord> bestSentence = new ArrayList<TaggedWord>();
         for(int i = 0; i < sentence.size(); i++) {
         	String frenchWord = sentence.get(i).word;
-        	String englishTranslation = Translation.getTranslation(frenchWord);
+        	String englishTranslation = Translation.getTranslation(bestSentence, frenchWord);
         	bestSentence.add(new TaggedWord(englishTranslation, sentence.get(i).tag));
         }
         return bestSentence;
@@ -266,7 +291,7 @@ public class Translation {
 	public static void eval(String sentenceFile, String dictFile) {
 		HolbrookCorpus trainingCorpus = new HolbrookCorpus(trainingCorpusPath);
 		LaplaceBigramLanguageModel laplaceBigramLM = new LaplaceBigramLanguageModel(trainingCorpus);
-		StupidBackoffLanguageModel sbLM = new StupidBackoffLanguageModel(trainingCorpus);
+		//StupidBackoffLanguageModel sbLM = new StupidBackoffLanguageModel(trainingCorpus);
 
 		Translation tfe = new Translation(sentenceFile, dictFile, laplaceBigramLM);
 
