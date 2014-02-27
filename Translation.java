@@ -9,10 +9,14 @@ public class Translation {
 	
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
+
+	public static final String trainingCorpusPath = "data/holbrook-tagged-train.dat";
 	
 	public static final String NO_TAG = "NO_TAG";
+
+	LanguageModel lm;
 	
-	public Translation(String corpusFileName, String dictionaryFileName) {
+	public Translation(String corpusFileName, String dictionaryFileName, LanguageModel languageModel) {
 		try {
 			sentences = readSentences(corpusFileName);
 			dictionary = readInDictionary(dictionaryFileName);
@@ -21,6 +25,8 @@ public class Translation {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+
+		lm = languageModel;
 	}
 	
 	/*
@@ -222,8 +228,8 @@ public class Translation {
                     sentence.add(i-1,new TaggedWord("","NO_TAG"));
                 }
                 if(auxilaryVerbs.contains(w.word)){
-                prevVerb=true;
-           		 }else prevVerb=false;
+                	prevVerb=true;
+           		}else prevVerb=false;
             }else{
                 prevVerb=false;
         	}
@@ -258,7 +264,11 @@ public class Translation {
 	}
 
 	public static void eval(String sentenceFile, String dictFile) {
-		Translation tfe = new Translation(sentenceFile, dictFile);
+		HolbrookCorpus trainingCorpus = new HolbrookCorpus(trainingCorpusPath);
+		LaplaceBigramLanguageModel laplaceBigramLM = new LaplaceBigramLanguageModel(trainingCorpus);
+		StupidBackoffLanguageModel sbLM = new StupidBackoffLanguageModel(trainingCorpus);
+
+		Translation tfe = new Translation(sentenceFile, dictFile, laplaceBigramLM);
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
