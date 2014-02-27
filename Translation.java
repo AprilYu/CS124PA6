@@ -19,7 +19,9 @@ public class Translation {
 	public static final int REORDER = 2;
 	public static final int PAST_TENSE = 3;
 
-	public static final int TRANS_LEVEL = PAST_TENSE;
+	public static final int TRANS_LEVEL = LANGUAGE_MODEL;
+	
+	public static final Random rand = new Random();
 
 
 	static LanguageModel lm;
@@ -229,7 +231,7 @@ public class Translation {
 		}
 		
 		if (TRANS_LEVEL < LANGUAGE_MODEL) {
-			return possibleTranslations.get(0);
+			return possibleTranslations.get(rand.nextInt(possibleTranslations.size()));
 		}
 
 		String bestTranslation = "";
