@@ -222,9 +222,6 @@ public class Translation {
 	}
 
 	public static String getTranslation(ArrayList<TaggedWord> sentenceSoFar, String foreignWord) {
-		//currently gets the first English translation from the list of possible translations
-		//FOR LATER: implement n-gram stuff to choose best translation of the word.
-		//May need to change function header for this ^^ depending on choice of n
 		ArrayList<String> possibleTranslations = dictionary.get(foreignWord);
 		if (possibleTranslations == null) {
 			//System.out.println("Possible Error: No entry for word " + foreignWord);
@@ -314,6 +311,7 @@ public class Translation {
 		//StupidBackoffLanguageModel sbLM = new StupidBackoffLanguageModel(trainingCorpus);
 
 		Translation tfe = new Translation(sentenceFile, dictFile, laplaceBigramLM);
+		//Translation tfe = new Translation(sentenceFile, dictFile, sbLM);
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
