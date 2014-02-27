@@ -19,8 +19,8 @@ public class Translation {
 	public static final int REORDER = 2;
 	public static final int PAST_TENSE = 3;
 
-	
 	public static final int TRANS_LEVEL = PAST_TENSE;
+
 
 	static LanguageModel lm;
 	
