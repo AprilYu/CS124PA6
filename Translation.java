@@ -301,9 +301,22 @@ public class Translation {
     	return sentence;
     }
 
+	public static ArrayList<TaggedWord> fixNegation(ArrayList<TaggedWord> sentence){
+		System.out.println("fixing negation...");
+		for(int i=0;i<sentence.size();i++){
+			if (sentence.get(i).word.equals("n")||sentence.get(i).word.equals("ne")){
+				sentence.remove(i);
+				i--;
+			}
+		}
+		return sentence;
+	}
+
+
     public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
     	if (TRANS_LEVEL >= PAST_TENSE)
     		sentence = trimPastTense(sentence);
+    	sentence = fixNegation(sentence);
     	return sentence;
 
     }
