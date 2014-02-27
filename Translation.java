@@ -6,7 +6,8 @@ public class Translation {
 	static ArrayList<ArrayList<TaggedWord>> sentences;
 	static Map<String, ArrayList<String>> dictionary;
 	static List<String> auxilaryVerbs =Arrays.asList("suis", "es", "est", "sommes", "êtes", "sont", "ai", "as", "a", "avons", "avez", "ont");
-	
+	static List<Character> vowels =Arrays.asList('a','e','i','o','u');
+
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
 	
@@ -232,6 +233,25 @@ public class Translation {
         return sentence;
     }
 
+    public static ArrayList<TaggedWord> fixArticles(ArrayList<TaggedWord> sentence){
+    	System.out.println("fixing Articles...");
+    	for(int i=0; i<sentence.size()-1; i++){
+    		String tag1 = sentence.get(i).tag;
+    		if(tag1.equals("d")){
+    			String w1 = sentence.get(i).word;
+    			String w2 = sentence.get(i+1).word;
+    			if(vowels.contains(w2.charAt(0)) && w1.equals("a")){
+    				w1 = "an";
+    				sentence.remove(i);
+    				sentence.add(i,new TaggedWord(w1, tag1));
+    				System.out.println("replacing a with an before "+w2);
+    			}
+    		}
+
+    	}
+    	return sentence;
+    }
+
     public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
     	sentence = trimPastTense(sentence);
     	return sentence;
@@ -240,6 +260,7 @@ public class Translation {
     
     public static ArrayList<TaggedWord> postProcess(ArrayList<TaggedWord> sentence){
     	sentence = reorderNounAdjPairs(sentence);
+    	sentence = fixArticles(sentence);
     	return sentence;
     }
 
