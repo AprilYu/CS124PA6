@@ -5,13 +5,18 @@ import java.lang.StringBuilder;
 public class Translation {
 	static ArrayList<ArrayList<TaggedWord>> sentences;
 	static Map<String, ArrayList<String>> dictionary;
+	static List<String> auxilaryVerbs =Arrays.asList("suis", "es", "est", "sommes", "êtes", "sont", "ai", "as", "a", "avons", "avez", "ont");
 	
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
+
+	public static final String trainingCorpusPath = "data/holbrook-tagged-train.dat";
 	
 	public static final String NO_TAG = "NO_TAG";
+
+	LanguageModel lm;
 	
-	public Translation(String corpusFileName, String dictionaryFileName) {
+	public Translation(String corpusFileName, String dictionaryFileName, LanguageModel languageModel) {
 		try {
 			sentences = readSentences(corpusFileName);
 			dictionary = readInDictionary(dictionaryFileName);
@@ -20,6 +25,8 @@ public class Translation {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+
+		lm = languageModel;
 	}
 	
 	/*
@@ -204,9 +211,42 @@ public class Translation {
 		return possibleTranslations.get(0);
 	}
     
-    public static ArrayList<String> trimPastTense(ArrayList<String> sentence){
-        //look at part of speech tags and remove auxilary verbs from passe compose constructions (either look at word before word with past participle tag and remove if etre or avoir, or find tag for these auxilary verbs)
-		return null;
+    /*
+     *removes auxilary verbs so that only the past participle gets translated. 
+     *looks to see if there are two consecutive verbs and if the first verb is an auxilary verb. if so, 
+     *the auxilary verb is removed
+     ***Known bug: does not handle case where auxilary verb and past participle are separated. eg. n'a jamais vu
+     */
+    public static ArrayList<TaggedWord> trimPastTense(ArrayList<TaggedWord> sentence){
+      System.out.println("Processing Passe Composee...");
+        boolean prevVerb=false;
+        for(int i=0;i<sentence.size();i++){
+        	TaggedWord w = sentence.get(i);
+        	if(w.tag.equals("v")){
+        		if(prevVerb){
+                    sentence.remove(i-1);
+                    sentence.add(i-1,new TaggedWord("","NO_TAG"));
+                }
+                if(auxilaryVerbs.contains(w.word)){
+                	prevVerb=true;
+           		}else prevVerb=false;
+            }else{
+                prevVerb=false;
+        	}
+        }
+
+        return sentence;
+    }
+
+    public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
+    	sentence = trimPastTense(sentence);
+    	return sentence;
+
+    }
+    
+    public static ArrayList<TaggedWord> postProcess(ArrayList<TaggedWord> sentence){
+    	sentence = reorderNounAdjPairs(sentence);
+    	return sentence;
     }
 
 	public static ArrayList<TaggedWord> translateSentence(ArrayList<TaggedWord> sentence) {
@@ -224,13 +264,18 @@ public class Translation {
 	}
 
 	public static void eval(String sentenceFile, String dictFile) {
-		Translation tfe = new Translation(sentenceFile, dictFile);
+		HolbrookCorpus trainingCorpus = new HolbrookCorpus(trainingCorpusPath);
+		LaplaceBigramLanguageModel laplaceBigramLM = new LaplaceBigramLanguageModel(trainingCorpus);
+		StupidBackoffLanguageModel sbLM = new StupidBackoffLanguageModel(trainingCorpus);
+
+		Translation tfe = new Translation(sentenceFile, dictFile, laplaceBigramLM);
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
+			s = preProcess(s);
 			ArrayList<TaggedWord> translation = translateSentence(s);
 			
-			translation = reorderNounAdjPairs(translation);
+			translation = postProcess(translation);
 			
 			
 			System.out.println("###\nThe French Sentence:");
@@ -281,7 +326,7 @@ public class Translation {
         Translation.eval(sentenceFile, dictFile);
     }
     
-    public static class TaggedWord {
+    public static class TaggedWord{
     	public final String word;
     	public final String tag;
     	
