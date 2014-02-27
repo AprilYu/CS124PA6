@@ -14,6 +14,14 @@ public class Translation {
 	
 	public static final String NO_TAG = "NO_TAG";
 
+	public static final int BASELINE = 0;
+	public static final int LANGUAGE_MODEL = 1;
+	public static final int REORDER = 2;
+	public static final int PAST_TENSE = 3;
+
+	
+	public static final int TRANS_LEVEL = PAST_TENSE;
+
 	static LanguageModel lm;
 	
 	public Translation(String corpusFileName, String dictionaryFileName, LanguageModel languageModel) {
@@ -50,6 +58,10 @@ public class Translation {
 				if (!"".equals(trans))
 					possibleTranslations.add(trans);
 			}
+			
+			// shuffle translations to remove possible bias when we constructed the dictionary
+			Collections.shuffle(possibleTranslations, new Random(0));
+			
 			dict.put(word, possibleTranslations);
 			lineNum++;
 		}
@@ -194,6 +206,8 @@ public class Translation {
 	public static String convertTaggedListToString(ArrayList<TaggedWord> sentence) {
 		String s = "";
 		for(int i = 0; i < sentence.size(); i++) {
+			if ("".equals(sentence.get(i).word))
+				continue;
 			s += sentence.get(i).word + " ";
 		}
 		return s;
@@ -212,6 +226,10 @@ public class Translation {
 		if (possibleTranslations == null) {
 			//System.out.println("Possible Error: No entry for word " + foreignWord);
 			return foreignWord;
+		}
+		
+		if (TRANS_LEVEL < LANGUAGE_MODEL) {
+			return possibleTranslations.get(0);
 		}
 
 		String bestTranslation = "";
@@ -248,7 +266,7 @@ public class Translation {
         	if(w.tag.equals("v")){
         		if(prevVerb){
                     sentence.remove(i-1);
-                    sentence.add(i-1,new TaggedWord("","NO_TAG"));
+                    i--;
                 }
                 if(auxilaryVerbs.contains(w.word)){
                 	prevVerb=true;
@@ -262,13 +280,15 @@ public class Translation {
     }
 
     public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
-    	sentence = trimPastTense(sentence);
+    	if (TRANS_LEVEL >= PAST_TENSE)
+    		sentence = trimPastTense(sentence);
     	return sentence;
 
     }
     
     public static ArrayList<TaggedWord> postProcess(ArrayList<TaggedWord> sentence){
-    	sentence = reorderNounAdjPairs(sentence);
+    	if (TRANS_LEVEL >= REORDER)
+    		sentence = reorderNounAdjPairs(sentence);
     	return sentence;
     }
 
@@ -296,13 +316,15 @@ public class Translation {
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
+			
+			System.out.println("###\nThe French Sentence:");
+			System.out.println(Translation.convertTaggedListToString(s));
+			
 			s = preProcess(s);
 			ArrayList<TaggedWord> translation = translateSentence(s);
 			
 			translation = postProcess(translation);
-			
-			System.out.println("###\nThe French Sentence:");
-			System.out.println(Translation.convertTaggedListToString(s));
+
 			System.out.println("   gets translated to:");
 			System.out.println(Translation.convertTaggedListToString(translation));
 			System.out.println();
@@ -368,6 +390,10 @@ public class Translation {
     			this.tag = splitWord[1];
     		}
     		//System.out.println("Parsed " + unsplitWord + " as " + this.word + " _ " + this.tag);
+    	}
+    	
+    	public String toString() {
+    		return word + " _ " + tag;
     	}
     }
 }
