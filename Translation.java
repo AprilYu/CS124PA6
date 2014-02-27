@@ -215,7 +215,7 @@ public class Translation {
 		}
 
 		String bestTranslation = "";
-		double bestScore = 0.0;
+		double bestScore = -Double.MAX_VALUE;
 		for(String trans : possibleTranslations) {
 			List<String> possibleSentence = new ArrayList<String>(Translation.convertTaggedListToList(sentenceSoFar));
 			possibleSentence.add(trans);
