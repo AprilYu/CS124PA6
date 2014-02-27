@@ -20,8 +20,10 @@ public class Translation {
 	public static final int REORDER = 2;
 	public static final int PAST_TENSE = 3;
 
-	
 	public static final int TRANS_LEVEL = PAST_TENSE;
+	
+	public static final Random rand = new Random(0);
+
 
 	static LanguageModel lm;
 	
@@ -230,7 +232,7 @@ public class Translation {
 		}
 		
 		if (TRANS_LEVEL < LANGUAGE_MODEL) {
-			return possibleTranslations.get(0);
+			return possibleTranslations.get(rand.nextInt(possibleTranslations.size()));
 		}
 
 		String bestTranslation = "";
@@ -291,7 +293,12 @@ public class Translation {
     				w1 = "an";
     				sentence.remove(i);
     				sentence.add(i,new TaggedWord(w1, tag1));
-    				System.out.println("replacing a with an before "+w2);
+    				//System.out.println("replacing a with an before "+w2);
+    			}else if(!vowels.contains(w2.charAt(0)) && w1.equals("an")){
+					w1 = "a";
+    				sentence.remove(i);
+    				sentence.add(i,new TaggedWord(w1, tag1));
+    				//System.out.println("replacing an with a before "+w2);
     			}
     		}
 
@@ -299,9 +306,45 @@ public class Translation {
     	return sentence;
     }
 
+    public static ArrayList<TaggedWord> fixPossession(ArrayList<TaggedWord> sentence){
+    	//look for form N de N or N d N (not du or des)
+    	//remove de/d and switch 2 nouns
+    	System.out.println("fixing possession...");
+		for(int i=0;i<sentence.size();i++){
+			if(sentence.get(i).tag.equals("n")){
+				String firstWord = sentence.get(i).word;
+				if(i+1<sentence.size() && (sentence.get(i+1).word.equals("de")||sentence.get(i+1).word.equals("d"))){
+					if(i+2<sentence.size() && sentence.get(i+2).tag.equals("n")){
+						String secondWord = sentence.get(i+2).word;
+						sentence.set(i,new TaggedWord(secondWord, "n"));
+						sentence.set(i+2, new TaggedWord(firstWord, "n"));
+						sentence.remove(i+1);
+						i--;
+					}	
+				}
+			}
+		}
+		return sentence;
+    }
+
+
+	public static ArrayList<TaggedWord> fixNegation(ArrayList<TaggedWord> sentence){
+		System.out.println("fixing negation...");
+		for(int i=0;i<sentence.size();i++){
+			if (sentence.get(i).word.equals("n")||sentence.get(i).word.equals("ne")){
+				sentence.remove(i);
+				i--;
+			}
+		}
+		return sentence;
+	}
+
+
     public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
     	if (TRANS_LEVEL >= PAST_TENSE)
     		sentence = trimPastTense(sentence);
+    	sentence = fixNegation(sentence);
+    	sentence = fixPossession(sentence);
     	return sentence;
 
     }
