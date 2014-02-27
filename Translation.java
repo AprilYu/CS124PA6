@@ -10,10 +10,22 @@ public class Translation {
 
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
+
+	public static final String trainingCorpusPath = "data/holbrook-tagged-train.dat";
 	
 	public static final String NO_TAG = "NO_TAG";
+
+	public static final int BASELINE = 0;
+	public static final int LANGUAGE_MODEL = 1;
+	public static final int REORDER = 2;
+	public static final int PAST_TENSE = 3;
+
 	
-	public Translation(String corpusFileName, String dictionaryFileName) {
+	public static final int TRANS_LEVEL = PAST_TENSE;
+
+	static LanguageModel lm;
+	
+	public Translation(String corpusFileName, String dictionaryFileName, LanguageModel languageModel) {
 		try {
 			sentences = readSentences(corpusFileName);
 			dictionary = readInDictionary(dictionaryFileName);
@@ -22,6 +34,8 @@ public class Translation {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+
+		lm = languageModel;
 	}
 	
 	/*
@@ -45,6 +59,10 @@ public class Translation {
 				if (!"".equals(trans))
 					possibleTranslations.add(trans);
 			}
+			
+			// shuffle translations to remove possible bias when we constructed the dictionary
+			Collections.shuffle(possibleTranslations, new Random(0));
+			
 			dict.put(word, possibleTranslations);
 			lineNum++;
 		}
@@ -189,21 +207,49 @@ public class Translation {
 	public static String convertTaggedListToString(ArrayList<TaggedWord> sentence) {
 		String s = "";
 		for(int i = 0; i < sentence.size(); i++) {
+			if ("".equals(sentence.get(i).word))
+				continue;
 			s += sentence.get(i).word + " ";
 		}
 		return s;
 	}
 
-	public static String getTranslation(String foreignWord) {
-		//currently gets the first English translation from the list of possible translations
-		//FOR LATER: implement n-gram stuff to choose best translation of the word.
-		//May need to change function header for this ^^ depending on choice of n
+	public static List<String> convertTaggedListToList(ArrayList<TaggedWord> sentence) {
+		List<String> untaggedWords = new ArrayList<String>();
+		for(TaggedWord word : sentence) {
+			untaggedWords.add(word.word);
+		}
+		return untaggedWords;
+	}
+
+	public static String getTranslation(ArrayList<TaggedWord> sentenceSoFar, String foreignWord) {
 		ArrayList<String> possibleTranslations = dictionary.get(foreignWord);
 		if (possibleTranslations == null) {
 			//System.out.println("Possible Error: No entry for word " + foreignWord);
 			return foreignWord;
 		}
-		return possibleTranslations.get(0);
+		
+		if (TRANS_LEVEL < LANGUAGE_MODEL) {
+			return possibleTranslations.get(0);
+		}
+
+		String bestTranslation = "";
+		double bestScore = -Double.MAX_VALUE;
+		for(String trans : possibleTranslations) {
+			List<String> possibleSentence = new ArrayList<String>(Translation.convertTaggedListToList(sentenceSoFar));
+			possibleSentence.add(trans);
+			double score = lm.score(possibleSentence);
+			if(score > bestScore) {
+				bestScore = score;
+				bestTranslation = trans;
+			}
+		}
+
+		if(bestTranslation.equals("")) {
+			bestTranslation = possibleTranslations.get(0);
+		}
+
+		return bestTranslation;
 	}
     
     /*
@@ -220,11 +266,11 @@ public class Translation {
         	if(w.tag.equals("v")){
         		if(prevVerb){
                     sentence.remove(i-1);
-                    sentence.add(i-1,new TaggedWord("","NO_TAG"));
+                    i--;
                 }
                 if(auxilaryVerbs.contains(w.word)){
-                prevVerb=true;
-           		 }else prevVerb=false;
+                	prevVerb=true;
+           		}else prevVerb=false;
             }else{
                 prevVerb=false;
         	}
@@ -253,14 +299,17 @@ public class Translation {
     }
 
     public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
-    	sentence = trimPastTense(sentence);
+    	if (TRANS_LEVEL >= PAST_TENSE)
+    		sentence = trimPastTense(sentence);
     	return sentence;
 
     }
     
     public static ArrayList<TaggedWord> postProcess(ArrayList<TaggedWord> sentence){
-    	sentence = reorderNounAdjPairs(sentence);
+    	if (TRANS_LEVEL >= REORDER)
+    		sentence = reorderNounAdjPairs(sentence);
     	sentence = fixArticles(sentence);
+
     	return sentence;
     }
 
@@ -272,25 +321,31 @@ public class Translation {
         ArrayList<TaggedWord> bestSentence = new ArrayList<TaggedWord>();
         for(int i = 0; i < sentence.size(); i++) {
         	String frenchWord = sentence.get(i).word;
-        	String englishTranslation = Translation.getTranslation(frenchWord);
+        	String englishTranslation = Translation.getTranslation(bestSentence, frenchWord);
         	bestSentence.add(new TaggedWord(englishTranslation, sentence.get(i).tag));
         }
         return bestSentence;
 	}
 
 	public static void eval(String sentenceFile, String dictFile) {
-		Translation tfe = new Translation(sentenceFile, dictFile);
+		HolbrookCorpus trainingCorpus = new HolbrookCorpus(trainingCorpusPath);
+		LaplaceBigramLanguageModel laplaceBigramLM = new LaplaceBigramLanguageModel(trainingCorpus);
+		//StupidBackoffLanguageModel sbLM = new StupidBackoffLanguageModel(trainingCorpus);
+
+		Translation tfe = new Translation(sentenceFile, dictFile, laplaceBigramLM);
+		//Translation tfe = new Translation(sentenceFile, dictFile, sbLM);
 
 		for(int i = 0; i < sentences.size(); i++) {
 			ArrayList<TaggedWord> s = sentences.get(i);
+			
+			System.out.println("###\nThe French Sentence:");
+			System.out.println(Translation.convertTaggedListToString(s));
+			
 			s = preProcess(s);
 			ArrayList<TaggedWord> translation = translateSentence(s);
 			
 			translation = postProcess(translation);
-			
-			
-			System.out.println("###\nThe French Sentence:");
-			System.out.println(Translation.convertTaggedListToString(s));
+
 			System.out.println("   gets translated to:");
 			System.out.println(Translation.convertTaggedListToString(translation));
 			System.out.println();
@@ -356,6 +411,10 @@ public class Translation {
     			this.tag = splitWord[1];
     		}
     		//System.out.println("Parsed " + unsplitWord + " as " + this.word + " _ " + this.tag);
+    	}
+    	
+    	public String toString() {
+    		return word + " _ " + tag;
     	}
     }
 }
