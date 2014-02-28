@@ -12,6 +12,8 @@ public class Translation {
 	public static final String DEFAULT_DICT = "data/dictionary.csv";
 	public static final String DEV_SENTENCES = "data/taggedTrainSentences.txt";
 
+	public static final String TEST_SENTENCES = "data/taggedTestSentences.txt";
+
 	public static final String trainingCorpusPath = "data/holbrook-tagged-train.dat";
 	
 	public static final String NO_TAG = "NO_TAG";
@@ -25,6 +27,7 @@ public class Translation {
 	
 	public static final Random rand = new Random(0);
 
+	public static final boolean verbose = false;
 
 	static LanguageModel lm;
 	
@@ -262,7 +265,9 @@ public class Translation {
      ***Known bug: does not handle case where auxilary verb and past participle are separated. eg. n'a jamais vu
      */
     public static ArrayList<TaggedWord> trimPastTense(ArrayList<TaggedWord> sentence){
-      System.out.println("Processing Passe Composee...");
+      	if(verbose) {
+      		System.out.println("Processing Passe Composee...");
+  		}
         boolean prevVerb=false;
         for(int i=0;i<sentence.size();i++){
         	TaggedWord w = sentence.get(i);
@@ -283,7 +288,9 @@ public class Translation {
     }
 
     public static ArrayList<TaggedWord> fixArticles(ArrayList<TaggedWord> sentence){
-    	System.out.println("fixing Articles...");
+    	if(verbose) {
+    		System.out.println("fixing Articles...");
+    	}
     	for(int i=0; i<sentence.size()-1; i++){
     		String tag1 = sentence.get(i).tag;
     		if(tag1.equals("d")){
@@ -309,7 +316,9 @@ public class Translation {
     public static ArrayList<TaggedWord> fixPossession(ArrayList<TaggedWord> sentence){
     	//look for form N de N or N d N (not du or des)
     	//remove de/d and switch 2 nouns
-    	System.out.println("fixing possession...");
+    	if(verbose) {
+    		System.out.println("fixing possession...");
+    	}
 		for(int i=0;i<sentence.size();i++){
 			if(sentence.get(i).tag.equals("n")){
 				String firstWord = sentence.get(i).word;
@@ -329,7 +338,9 @@ public class Translation {
 
 
 	public static ArrayList<TaggedWord> fixNegation(ArrayList<TaggedWord> sentence){
-		System.out.println("fixing negation...");
+		if(verbose) {
+			System.out.println("fixing negation...");
+		}
 		for(int i=0;i<sentence.size();i++){
 			if (sentence.get(i).word.equals("n")||sentence.get(i).word.equals("ne")){
 				sentence.remove(i);
@@ -437,7 +448,9 @@ public class Translation {
 	}
 	
 	private static ArrayList<TaggedWord> reorderNounAdjPairs(ArrayList<TaggedWord> sentence) {
-		System.out.println("Re-ordering adjective/noun pairs...");
+		if(verbose) {
+			System.out.println("Re-ordering adjective/noun pairs...");
+		}
 		for (int i = 0; i < sentence.size() - 1; i++) {
 			String tag1 = sentence.get(i).tag;
 			String tag2 = sentence.get(i + 1).tag;
@@ -468,7 +481,8 @@ public class Translation {
 	// args[0] is the sentence file to translate (defaults to the dev sentences)
 	// args[1] is an optional alternate dictionary file
 	public static void main(String[] args) {
-		String sentenceFile = DEV_SENTENCES;
+		//String sentenceFile = DEV_SENTENCES;
+		String sentenceFile = TEST_SENTENCES;
 		String dictFile = DEFAULT_DICT;
 		if (args.length > 0)
 			sentenceFile = args[0];

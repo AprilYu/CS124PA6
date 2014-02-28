@@ -1,0 +1,31 @@
+Translating sentences in data/taggedTestSentences.txt using dict data/dictionary.csv
+###
+The French Sentence:
+la 22ème édition des jeux d hiver a ouvert à sotchi , en russie , le 7 février dernier . 
+   gets translated to:
+the twenty second edition some winter games open to sochi , of russia , the february 7th latest . 
+
+###
+The French Sentence:
+dans le cadre d une opération contre d anciens gardes présumés du camp de concentration d auschwitz pendant la seconde guerre mondiale , trois hommes , âgés de 88 , 92 et 94 ans , ont été arrêtés en allemagne , dans l etat régional du bade-wurtemberg , ont indiqué , été , des sources judiciaires . 
+   gets translated to:
+in the surroundings for a deal against for former guard overestimate some concentration auschwitz campsite during the second conflict international , three men , old for 88 , 92 and 94 years , summer halted in germany , in the state regional some bade-wurtemberg , revealed , summer , some origins judicial . 
+
+###
+The French Sentence:
+mon père , qui était en première ligne dans les ardennes et a fait face aux troupes fanatisées allemandes avant de passer cinq ans derrière les barbelés , en savait quelque chose . 
+   gets translated to:
+my dad , which was in first line in the ardennes and made face at the troops fanaticised german earlier for flowing past 5 years behind the barbed , of is familiar with whatever affair . 
+
+###
+The French Sentence:
+devant et derrière la caméra , entre paris et los angeles , julie delpy est une actrice , scénariste , réalisatrice , productrice , et maman très occupée . 
+   gets translated to:
+front and behind the camera , between paris and los angeles , julie delpy are an actress , scriptwriter , director , production , and mother very dedicated to . 
+
+###
+The French Sentence:
+même si les 43 athlètes ukrainiens présents à sotchi ont déjà pour la grande majorité concouru , certains ont fait connaþtre leur intention de boycott . 
+   gets translated to:
+identical whether the 43 athletes ukrainian here at sochi have again for the big majority contributed , some made disclose their boycott intention . 
+
