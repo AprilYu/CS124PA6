@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.*;
 import java.lang.StringBuilder;
+import java.util.regex.*;
 
 public class Translation {
 	static ArrayList<ArrayList<TaggedWord>> sentences;
@@ -241,7 +242,6 @@ public class Translation {
 			List<String> possibleSentence = new ArrayList<String>(Translation.convertTaggedListToList(sentenceSoFar));
 			possibleSentence.add(trans);
 			double score = lm.score(possibleSentence);
-			System.out.println("Score for " + possibleSentence + " is " + score);
 			if(score > bestScore) {
 				bestScore = score;
 				bestTranslation = trans;
@@ -338,6 +338,45 @@ public class Translation {
 		}
 		return sentence;
 	}
+	
+	
+	private static ArrayList<TaggedWord> reorderDates(ArrayList<TaggedWord> sentence) {
+		Pattern monthPattern = Pattern.compile("(january|february|march|april|may|june|july|august|september|october" +
+			"|november|december)");
+		Pattern dayOfWeekPattern = Pattern.compile("(sunday|monday|tuesday|wednesday|thursday|friday|saturday)");
+		Pattern dayPattern = Pattern.compile("([0-9][0-9]?)");
+		Pattern yearPattern = Pattern.compile("([0-9][0-9][0-9][0-9])");
+		for (int i = 0; i < sentence.size() - 1; i++) {
+			Matcher secondWordMatcher = dayPattern.matcher(sentence.get(i).word);
+			Matcher thirdWordMatcher = monthPattern.matcher(sentence.get(i + 1).word);
+			
+			String optionalFirstWord = (i == 0) ? null : sentence.get(i -1).word;
+			String optionalFourthWord = (i == sentence.size() - 2) ? null : sentence.get(i + 2).word;
+			
+			//Matcher firstMatcher = (optionalFirstWord == null) ? null : dayOfWeekPattern.matcher(optionalFirstWord);
+			//Matcher fourthMatcher = (optionalFourthWord == null) ? null : yearPattern.matcher(optionalFourthWord);
+			if (secondWordMatcher.find() && thirdWordMatcher.find()) {
+				/*boolean firstMatch = (firstMatcher != null) && firstMatcher.find();
+				boolean fourthMatch = (fourthMatcher != null) && fourthMatcher.find();
+				if (firstMatch && fourthMatch) {
+					
+				} else if (firstMatch && !fourthMatch) {
+				
+				} else if (!firstMatch && fourthMatch) {
+				
+				} else {
+				
+				}*/
+				TaggedWord dayWord = sentence.get(i);
+				sentence.remove(i);
+				int dayNum = Integer.parseInt(dayWord.word);
+				TaggedWord newDayWord = new TaggedWord(dayWord.word + endingForDayNum(dayNum), dayWord.tag);
+				sentence.add(i + 1, newDayWord);
+			}
+			
+		}
+		return sentence;
+	}
 
 
     public static ArrayList<TaggedWord> preProcess(ArrayList<TaggedWord> sentence){
@@ -350,6 +389,7 @@ public class Translation {
     }
     
     public static ArrayList<TaggedWord> postProcess(ArrayList<TaggedWord> sentence){
+    	sentence = reorderDates(sentence);
     	if (TRANS_LEVEL >= REORDER)
     		sentence = reorderNounAdjPairs(sentence);
     	sentence = fixArticles(sentence);
@@ -402,6 +442,8 @@ public class Translation {
 			String tag1 = sentence.get(i).tag;
 			String tag2 = sentence.get(i + 1).tag;
 			if (isNoun(tag1) && isAdj(tag2)) {
+				if (('9' - tag2.charAt(0)) > 9 || ('9' - tag2.charAt(0)) < 0)
+					continue;
 				TaggedWord adj = sentence.get(i + 1);
 				sentence.remove(i + 1);
 				sentence.add(i, adj);
@@ -434,6 +476,28 @@ public class Translation {
 			dictFile = args[1];
 		System.out.println("Translating sentences in " + sentenceFile + " using dict " + dictFile);
         Translation.eval(sentenceFile, dictFile);
+    }
+    
+    private static String endingForDayNum(int num) {
+    	if (num == 11) {
+    		return "th";
+    	} else if (num == 12) {
+    		return "th";
+    	} else if (num == 13) {
+    		return "th";
+    	}
+    	
+    	int lastDigit = num % 10;
+    	
+    	if (lastDigit == 1) {
+    		return "st";
+    	} else if (lastDigit == 2) {
+    		return "nd";
+    	} else if (lastDigit == 3) {
+    		return "rd";
+    	} else {
+    		return "th";
+    	}
     }
     
     public static class TaggedWord{
