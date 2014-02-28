@@ -365,24 +365,18 @@ public class Translation {
 			String optionalFourthWord = (i == sentence.size() - 2) ? null : sentence.get(i + 2).word;
 			
 			//Matcher firstMatcher = (optionalFirstWord == null) ? null : dayOfWeekPattern.matcher(optionalFirstWord);
-			//Matcher fourthMatcher = (optionalFourthWord == null) ? null : yearPattern.matcher(optionalFourthWord);
+			Matcher fourthMatcher = (optionalFourthWord == null) ? null : yearPattern.matcher(optionalFourthWord);
 			if (secondWordMatcher.find() && thirdWordMatcher.find()) {
-				/*boolean firstMatch = (firstMatcher != null) && firstMatcher.find();
+				//boolean firstMatch = (firstMatcher != null) && firstMatcher.find();
 				boolean fourthMatch = (fourthMatcher != null) && fourthMatcher.find();
-				if (firstMatch && fourthMatch) {
-					
-				} else if (firstMatch && !fourthMatch) {
-				
-				} else if (!firstMatch && fourthMatch) {
-				
-				} else {
-				
-				}*/
 				TaggedWord dayWord = sentence.get(i);
 				sentence.remove(i);
 				int dayNum = Integer.parseInt(dayWord.word);
 				TaggedWord newDayWord = new TaggedWord(dayWord.word + endingForDayNum(dayNum), dayWord.tag);
 				sentence.add(i + 1, newDayWord);
+				if (fourthMatch) {
+					sentence.add(i + 2, new TaggedWord(",","p"));
+				}
 			}
 			
 		}
